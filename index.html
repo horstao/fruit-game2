@@ -1,634 +1,261 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#1c1030">
-<title>Pega Comida</title>
+<meta name="theme-color" content="#101323">
+<title>Fruit Smash — Jogo de movimento</title>
 <style>
-  :root {
-    color-scheme: dark;
-    --plum: #1c1030;
-    --plum-2: #2a1846;
-    --cream: #fff6e8;
-    --tangerine: #ff8a3d;
-    --mint: #5df2b0;
-    --berry: #ff4d6d;
-    --ellipse-w: 40vw;                 /* largura da elipse = 40% da tela */
-    --ellipse-h: min(52vw, 70vh);
-    --ellipse-top: 42%;                /* mantenha igual a CONFIG.ellipseCy */
-  }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body {
-    margin: 0; height: 100%; overflow: hidden; background: #000; color: var(--cream);
-    font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Trebuchet MS", system-ui, sans-serif;
-    touch-action: none; user-select: none; -webkit-user-select: none;
-  }
-  #stage { position: fixed; inset: 0; height: 100dvh; overflow: hidden; }
-  video {
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    object-fit: cover; transform: scaleX(-1); background: var(--plum);
-  }
-  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .screen { position: absolute; inset: 0; }
-  .hidden { display: none !important; }
-
-  /* ---------- Boas-vindas (antes de ligar a câmera) ---------- */
-  #welcome {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 18px; padding: 24px; text-align: center;
-    background:
-      radial-gradient(120% 70% at 50% 0%, #3b2166 0%, transparent 60%),
-      var(--plum);
-  }
-  #welcome .parade { font-size: 44px; letter-spacing: 6px; line-height: 1.3; }
-  #welcome h1 {
-    margin: 0; font-size: clamp(40px, 13vw, 64px); line-height: .95; font-weight: 900;
-    letter-spacing: -0.02em; color: var(--cream);
-  }
-  #welcome p { margin: 0; max-width: 28ch; font-size: 17px; line-height: 1.4; opacity: .85; }
-  button {
-    font: inherit; font-weight: 800; font-size: 18px; color: var(--plum);
-    background: var(--tangerine); border: 0; border-radius: 999px;
-    padding: 16px 28px; min-height: 52px; cursor: pointer;
-    box-shadow: 0 6px 0 #b8541a;
-    transition: transform .08s, box-shadow .08s;
-  }
-  button:active { transform: translateY(4px); box-shadow: 0 2px 0 #b8541a; }
-  button:disabled { opacity: .6; }
-  button:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
-  #welcomeMsg { min-height: 2.6em; font-size: 15px; color: #ffd0a8; }
-
-  /* ---------- Tela inicial / pausa (instrução + elipse) ---------- */
-  #start { pointer-events: none; }
-  #start .instr {
-    position: absolute; left: 0; right: 0; top: max(5%, env(safe-area-inset-top));
-    margin: 0; padding: 0 9%; text-align: center;
-    font-size: clamp(19px, 5.4vw, 30px); line-height: 1.2; font-weight: 800;
-    text-shadow: 0 2px 12px rgba(0,0,0,.75);
-  }
-  #pausedTag {
-    position: absolute; left: 50%; top: calc(max(5%, env(safe-area-inset-top)) + 4.6em);
-    transform: translateX(-50%); font-size: 15px; font-weight: 800;
-    background: var(--tangerine); color: var(--plum); padding: 6px 14px; border-radius: 999px;
-  }
-  #ellipse {
-    position: absolute; left: 50%; top: var(--ellipse-top);
-    width: var(--ellipse-w); height: var(--ellipse-h);
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    border: 3px dashed rgba(255,246,232,.95);
-    box-shadow: 0 0 0 200vmax rgba(28,16,48,.62);
-    transition: border-color .2s, box-shadow .2s;
-  }
-  #ellipse.ok {
-    border-style: solid; border-color: var(--mint);
-    box-shadow: 0 0 28px 4px rgba(93,242,176,.7), 0 0 0 200vmax rgba(28,16,48,.5);
-  }
-  #hint {
-    position: absolute; left: 0; right: 0;
-    top: calc(var(--ellipse-top) + var(--ellipse-h) / 2 + 20px);
-    margin: 0; padding: 0 9%; text-align: center; font-size: 18px; font-weight: 700;
-    text-shadow: 0 2px 10px rgba(0,0,0,.8);
-  }
-  #hint.ok { color: var(--mint); }
-
-  /* ---------- Fim de jogo ---------- */
-  #over {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 10px; text-align: center; padding: 24px;
-    background: rgba(28,16,48,.88);
-  }
-  #over h2 { margin: 0; font-size: 36px; font-weight: 900; }
-  #over .big { font-size: clamp(72px, 24vw, 120px); font-weight: 900; line-height: 1; color: var(--tangerine); }
-  #over .best { font-size: 17px; opacity: .85; margin-bottom: 10px; }
-  #over small { opacity: .7; margin-top: 4px; }
-
-  @media (prefers-reduced-motion: reduce) {
-    #ellipse, button { transition: none; }
-  }
+  :root { color-scheme: dark; --lime:#b8f34a; --pink:#ff5d8f; --panel:rgba(12,16,31,.78); }
+  * { box-sizing:border-box; }
+  html,body { margin:0; width:100%; height:100%; overflow:hidden; background:#101323; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  #app { position:relative; width:100%; height:100%; min-height:100dvh; overflow:hidden; background:radial-gradient(ellipse at 50% 15%,#28365c,#101323 65%); }
+  #camera { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); opacity:.28; filter:saturate(.8) contrast(1.12); }
+  #shade { position:absolute; inset:0; background:linear-gradient(180deg,rgba(8,12,26,.55),rgba(8,12,26,.16) 45%,rgba(8,12,26,.75)); pointer-events:none; }
+  #game { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .hud { position:absolute; z-index:3; top:max(12px,env(safe-area-inset-top)); left:0; right:0; display:flex; justify-content:space-between; align-items:center; padding:0 18px; pointer-events:none; }
+  .pill { background:var(--panel); border:1px solid #ffffff25; border-radius:18px; padding:9px 13px; backdrop-filter:blur(10px); box-shadow:0 8px 30px #0003; }
+  #lives { font-size:25px; letter-spacing:3px; white-space:nowrap; }
+  #score { font-weight:800; font-size:19px; color:var(--lime); }
+  #cameraStatus { position:absolute; z-index:3; bottom:max(12px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); font-size:11px; color:#ffffffb8; background:#080c1acc; padding:7px 11px; border-radius:20px; white-space:nowrap; }
+  #zones { position:absolute; z-index:2; inset:0; pointer-events:none; display:flex; justify-content:space-between; }
+  .zone { width:35%; border-left:1px dashed #ffffff18; border-right:1px dashed #ffffff18; background:linear-gradient(180deg,#ffffff05,#ffffff00); }
+  #overlay { position:absolute; z-index:5; inset:0; display:flex; align-items:center; justify-content:center; padding:22px; background:#080c1a88; backdrop-filter:blur(7px); }
+  .modal { width:min(440px,100%); text-align:center; background:linear-gradient(145deg,#202b4b,#11182d); border:1px solid #ffffff25; border-radius:28px; padding:27px 23px; box-shadow:0 25px 80px #0008; }
+  h1 { margin:0 0 8px; font-size:clamp(29px,8vw,42px); letter-spacing:-1.5px; }
+  h1 span { color:var(--lime); }
+  .sub { color:#c4cbe0; line-height:1.5; margin:0 auto 17px; font-size:14px; }
+  .legend { display:flex; justify-content:center; gap:16px; flex-wrap:wrap; margin:15px 0 21px; font-size:13px; }
+  .legend b { display:block; font-size:25px; margin-bottom:4px; }
+  button { border:0; border-radius:16px; padding:15px 25px; width:100%; color:#14200a; font-size:17px; font-weight:850; background:var(--lime); box-shadow:0 7px 0 #7ba52d; cursor:pointer; }
+  button:active { transform:translateY(3px); box-shadow:0 4px 0 #7ba52d; }
+  #message { min-height:20px; margin-top:13px; color:#ffd2df; font-size:12px; }
+  .small { font-size:11px; color:#aab4d0; margin-top:15px; line-height:1.45; }
+  .fruit { position:absolute; z-index:2; font-size:clamp(45px,12vw,68px); line-height:1; filter:drop-shadow(0 5px 7px #0008); will-change:transform; user-select:none; }
+  .hit { animation:pop .22s ease-out forwards; }
+  @keyframes pop { to { transform:scale(1.8); opacity:0; } }
+  #flash { position:absolute; z-index:4; inset:0; pointer-events:none; opacity:0; }
+  #flash.good { background:#b8f34a22; animation:flash .25s; }
+  #flash.bad { background:#ff315522; animation:flash .3s; }
+  @keyframes flash { 0%{opacity:1}100%{opacity:0} }
+  @media (max-height:620px) { .modal{padding:18px}.legend{margin:8px 0 13px}.small{margin-top:8px} }
 </style>
 </head>
 <body>
-<div id="stage">
-  <video id="cam" autoplay muted playsinline></video>
+<div id="app">
+  <video id="camera" autoplay playsinline muted></video>
+  <div id="shade"></div>
+  <div id="zones"><div class="zone"></div><div class="zone"></div></div>
   <canvas id="game"></canvas>
-
-  <!-- Antes de ligar a câmera -->
-  <div id="welcome" class="screen">
-    <div class="parade" aria-hidden="true">🍓🍗🍊</div>
-    <h1>Pega<br>Comida</h1>
-    <p>Acerte a comida com as mãos. Desvie do resto.</p>
-    <button id="btnCam" type="button">Ligar a câmera</button>
-    <div id="welcomeMsg" role="status"></div>
+  <div class="hud">
+    <div class="pill" id="lives" aria-label="3 vidas">❤️❤️❤️</div>
+    <div class="pill" id="score">🍎 0</div>
   </div>
-
-  <!-- Tela inicial (também aparece quando o jogo pausa) -->
-  <div id="start" class="screen hidden">
-    <p class="instr">Apoie seu celular e coloque sua face no centro</p>
-    <div id="pausedTag" class="hidden">Jogo pausado</div>
-    <div id="ellipse"></div>
-    <p id="hint"></p>
-  </div>
-
-  <!-- Fim de jogo -->
-  <div id="over" class="screen hidden">
-    <h2>Fim de jogo</h2>
-    <div class="big" id="finalScore">0</div>
-    <div class="best" id="bestScore"></div>
-    <button id="btnAgain" type="button">Jogar de novo</button>
-    <small id="overCount"></small>
+  <div id="flash"></div>
+  <div id="cameraStatus">Câmera ainda não iniciada</div>
+  <div id="overlay">
+    <div class="modal">
+      <h1>FRUIT <span>SMASH</span></h1>
+      <p class="sub">Use as mãos para acertar as frutas que caem. Evite a junk food!</p>
+      <div class="legend">
+        <div><b>🍓🍒🍎🍅🍉🍊🥕🥦</b><span>Acertar = +1 ponto</span></div>
+        <div><b>🌭🍔🍕🍟🫔🍩🍫🍿</b><span>Acertar = perde vida</span></div>
+      </div>
+      <p class="sub">A câmera observa os 35% da esquerda e os 35% da direita. Faça um movimento rápido com a mão no lado do emoji para acertá-lo.</p>
+      <button id="start">ATIVAR CÂMERA E JOGAR</button>
+      <div id="message"></div>
+      <div class="small">Precisa permitir o acesso à câmera. Para funcionar, abra esta página em HTTPS (ou localhost). A imagem é processada no próprio aparelho e não é enviada.</div>
+    </div>
   </div>
 </div>
-
 <script>
 (() => {
-'use strict';
+  const video = document.getElementById('camera');
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const overlay = document.getElementById('overlay');
+  const startBtn = document.getElementById('start');
+  const message = document.getElementById('message');
+  const livesEl = document.getElementById('lives');
+  const scoreEl = document.getElementById('score');
+  const statusEl = document.getElementById('cameraStatus');
+  const flash = document.getElementById('flash');
+  const fruits = ['🍓','🍒','🍎','🍅','🍉','🍊','🥕','🥦'];
+  const junk = ['🌭','🍔','🍕','🍟','🫔','🍩','🍫','🍿'];
+  const sample = document.createElement('canvas');
+  sample.width = 160; sample.height = 120;
+  const sctx = sample.getContext('2d', {willReadFrequently:true});
+  let previous = null, stream = null, running = false, score = 0, lives = 3;
+  let pairs = [], lastSpawn = 0, lastHit = 0, raf = 0, lastFrame = 0;
+  let motion = [0,0], motionThreshold = 0.075;
+  let width = innerWidth, height = innerHeight, pairId = 0;
 
-/* =====================  CONFIGURAÇÃO  ===================== */
-const CONFIG = {
-  ellipseCy: 0.53,        // centro vertical da elipse (fração da altura)
-  ellipseW: 0.50,         // largura da elipse (fração da largura da tela)
-  maxFaceW: 0.50,         // rosto maior que isso (fração da largura) pausa o jogo
-  minFaceW: 0.16,         // rosto menor que isso não conta como "centralizado"
-  centerTolX: 0.13,       // tolerância horizontal para centralizar
-  centerTolY: 0.11,       // tolerância vertical
-  holdMs: 800,            // tempo com o rosto centralizado para (re)começar
-  lostMs: 450,            // sem rosto por esse tempo => pausa
-  lives: 3,
-  pointsFood: 10,
-  // detecção de movimento (hit)
-  motionW: 80,            // largura da grade de análise
-  pixelDiff: 28,          // diferença de luminância para um pixel "mexeu"
-  hitRatio: 0.20,         // fração de pixels em movimento dentro do emoji para contar o toque
-  globalMax: 0.50,        // se mais que isso da imagem mexe, ignora (celular balançando)
-  motionEveryMs: 60,
-  // queda
-  fallSecondsStart: 3.4,  // segundos para cruzar a tela no começo
-  spawnStart: 1.7,        // segundos entre pares no começo
-  spawnMin: 0.85,
-};
+  function resize() {
+    width = innerWidth; height = innerHeight;
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    canvas.width = Math.round(width*dpr); canvas.height = Math.round(height*dpr);
+    canvas.style.width = width+'px'; canvas.style.height = height+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  addEventListener('resize', resize); resize();
 
-const FOOD  = ['🍓','🍒','🍎','🍅','🌶️','🍉','🍑','🍊','🥕','🌭','🍳','🍗'];
-const OTHER = ['📞','📟','📠','💾','💡','🪙','💿','🪑','🧸','🍀','🌷'];
-const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
-const DEBUG = /[?&]debug/.test(location.search);
+  function updateHud() {
+    livesEl.textContent = '❤️'.repeat(lives) + '🖤'.repeat(3-lives);
+    livesEl.setAttribute('aria-label', lives+' vidas');
+    scoreEl.textContent = '🍎 '+score;
+  }
+  function showFlash(kind) {
+    flash.className = ''; void flash.offsetWidth; flash.className = kind;
+  }
+  function loseLife(reason) {
+    if (!running) return;
+    lives--; updateHud(); showFlash('bad');
+    statusEl.textContent = reason || 'Ops! Você perdeu uma vida';
+    if (lives <= 0) endGame();
+  }
+  function spawnPair(now) {
+    const validLeft = Math.random() < .5;
+    const leftEmoji = validLeft ? pick(fruits) : pick(junk);
+    const rightEmoji = validLeft ? pick(junk) : pick(fruits);
+    const y = -75;
+    const speed = Math.min(175 + score*3.2, 330) + Math.random()*35;
+    const pair = {id:++pairId, y, speed, items:[
+      {side:'left', emoji:leftEmoji, valid:validLeft, x:width*.175},
+      {side:'right',emoji:rightEmoji,valid:!validLeft,x:width*.825}
+    ]};
+    pairs.push(pair); lastSpawn = now;
+  }
+  function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
 
-/* =====================  ELEMENTOS  ===================== */
-const $ = id => document.getElementById(id);
-const video = $('cam'), canvas = $('game'), ctx = canvas.getContext('2d');
-const elWelcome = $('welcome'), elStart = $('start'), elOver = $('over');
-const elEllipse = $('ellipse'), elHint = $('hint'), elPaused = $('pausedTag');
-const btnCam = $('btnCam'), welcomeMsg = $('welcomeMsg');
-
-let W = 0, H = 0, DPR = 1;
-function resize() {
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
-  W = canvas.clientWidth; H = canvas.clientHeight;
-  canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  SW = CONFIG.motionW; SH = Math.max(8, Math.round(SW * H / W));
-  mc.width = SW; mc.height = SH;
-  prevGray = null;
-}
-
-/* =====================  ESTADO  ===================== */
-let mode = 'welcome';        // welcome | waiting | playing | over
-let g = newGame();
-let best = 0;
-let holdT = 0;
-let flash = 0;               // piscada vermelha ao errar
-const fx = [];               // efeitos visuais
-
-function newGame() {
-  return { started: false, score: 0, lives: CONFIG.lives, combo: 0, goods: 0,
-           items: [], spawnT: 0.6, grace: 0 };
-}
-
-/* =====================  ÁUDIO / VIBRAÇÃO  ===================== */
-let actx = null;
-function beep(freq, dur, type = 'sine', vol = 0.12, slideTo = 0) {
-  if (!actx) return;
-  const o = actx.createOscillator(), gn = actx.createGain(), t = actx.currentTime;
-  o.type = type; o.frequency.setValueAtTime(freq, t);
-  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
-  gn.gain.setValueAtTime(vol, t); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(gn).connect(actx.destination); o.start(t); o.stop(t + dur);
-}
-const sfxGood = combo => beep(520 + Math.min(combo, 12) * 40, 0.12, 'triangle', 0.14, 900 + combo * 30);
-const sfxBad  = () => { beep(180, 0.28, 'sawtooth', 0.12, 70); navigator.vibrate && navigator.vibrate(140); };
-
-/* =====================  CÂMERA E DETECÇÃO DE ROSTO  ===================== */
-let detectFace = null;       // () => {x,y,w,h} em pixels do vídeo | null
-let lastVideoTime = -1;
-
-async function loadDetector() {
-  // 1) MediaPipe (funciona em qualquer celular moderno)
-  try {
-    const ver = '0.10.14';
-    const mp = await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${ver}/+esm`);
-    const fileset = await mp.FilesetResolver.forVisionTasks(
-      `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${ver}/wasm`);
-    const modelAssetPath =
-      'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite';
-    let det;
-    try {
-      det = await mp.FaceDetector.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath, delegate: 'GPU' }, runningMode: 'VIDEO', minDetectionConfidence: 0.5 });
-    } catch (_) {
-      det = await mp.FaceDetector.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath, delegate: 'CPU' }, runningMode: 'VIDEO', minDetectionConfidence: 0.5 });
+  // Compara quadros consecutivos em baixa resolução. As regiões úteis são
+  // os 35% externos de cada lado; a faixa central de 30% é ignorada.
+  function detectMotion(now) {
+    if (video.readyState < 2 || video.videoWidth === 0) return;
+    sctx.save();
+    sctx.translate(sample.width,0); sctx.scale(-1,1); // espelha como a prévia
+    sctx.drawImage(video,0,0,sample.width,sample.height);
+    sctx.restore();
+    const data = sctx.getImageData(0,0,sample.width,sample.height).data;
+    const current = new Uint8Array(sample.width*sample.height);
+    for (let i=0,p=0; i<data.length; i+=4,p++) {
+      current[p] = (data[i]*3 + data[i+1]*6 + data[i+2]) / 10;
     }
-    detectFace = async () => {
-      if (video.currentTime === lastVideoTime) return undefined;   // frame repetido
-      lastVideoTime = video.currentTime;
-      const res = det.detectForVideo(video, performance.now());
-      let bestBox = null;
-      for (const d of res.detections || []) {
-        const b = d.boundingBox; if (!b) continue;
-        if (!bestBox || b.width > bestBox.w) bestBox = { x: b.originX, y: b.originY, w: b.width, h: b.height };
-      }
-      return bestBox;
-    };
-    return true;
-  } catch (e) { console.warn('MediaPipe indisponível:', e); }
-
-  // 2) API nativa do navegador (Chrome/Android com Shape Detection)
-  if ('FaceDetector' in window) {
-    try {
-      const nd = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 2 });
-      detectFace = async () => {
-        const faces = await nd.detect(video);
-        let bestBox = null;
-        for (const f of faces) {
-          const b = f.boundingBox;
-          if (!bestBox || b.width > bestBox.w) bestBox = { x: b.x, y: b.y, w: b.width, h: b.height };
+    if (previous) {
+      let changedL=0, changedR=0, countL=0, countR=0;
+      const xL = Math.floor(sample.width*.0), xLE = Math.floor(sample.width*.35);
+      const xRS = Math.floor(sample.width*.65), xRE = sample.width;
+      for (let y=0;y<sample.height;y+=2) {
+        for (let x=xL;x<xLE;x+=2) {
+          const p=y*sample.width+x; countL++;
+          if (Math.abs(current[p]-previous[p]) > 24) changedL++;
         }
-        return bestBox;
-      };
-      return true;
-    } catch (e) { console.warn('FaceDetector nativo falhou:', e); }
-  }
-  return false;
-}
-
-async function startCamera() {
-  btnCam.disabled = true; welcomeMsg.textContent = 'Abrindo a câmera…';
-  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume && actx.resume(); } catch (_) {}
-
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    welcomeMsg.textContent = 'Câmera indisponível. Abra esta página por HTTPS (ou localhost).';
-    btnCam.disabled = false; return;
-  }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
-    video.srcObject = stream;
-    await video.play();
-  } catch (e) {
-    welcomeMsg.textContent = (e && e.name === 'NotAllowedError')
-      ? 'Permissão negada. Libere a câmera nas configurações do navegador.'
-      : 'Não consegui abrir a câmera frontal.';
-    btnCam.disabled = false; return;
-  }
-
-  welcomeMsg.textContent = 'Carregando detecção de rosto…';
-  const ok = await loadDetector();
-  if (!ok) {
-    welcomeMsg.textContent = 'Não consegui carregar a detecção de rosto. Verifique a internet e tente de novo.';
-    btnCam.disabled = false; return;
-  }
-  try { if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {}); } catch (_) {}
-  goWaiting();
-}
-btnCam.addEventListener('click', startCamera);
-
-/* ----- Estado do rosto (em fração da tela, já espelhado) ----- */
-let face = null;            // {cx, cy, w} suavizado
-let lastSeen = -1e9;
-let detecting = false;
-
-function toScreen(b) {
-  const vw = video.videoWidth, vh = video.videoHeight;
-  const s = Math.max(W / vw, H / vh);
-  const visW = W / s, visH = H / s, sx = (vw - visW) / 2, sy = (vh - visH) / 2;
-  const x0 = (b.x - sx) / visW, x1 = (b.x + b.w - sx) / visW;
-  const y0 = (b.y - sy) / visH, y1 = (b.y + b.h - sy) / visH;
-  return { x: 1 - x1, y: y0, w: x1 - x0, h: y1 - y0 };    // espelhado
-}
-
-async function runDetect(now) {
-  if (detecting || !detectFace || !video.videoWidth) return;
-  detecting = true;
-  try {
-    const box = await detectFace();
-    if (box !== undefined) {
-      if (box) {
-        const s = toScreen(box);
-        const cur = { cx: s.x + s.w / 2, cy: s.y + s.h / 2, w: s.w, h: s.h };
-        face = face && now - lastSeen < 1000
-          ? { cx: face.cx + (cur.cx - face.cx) * 0.55, cy: face.cy + (cur.cy - face.cy) * 0.55,
-              w: face.w + (cur.w - face.w) * 0.55, h: face.h + (cur.h - face.h) * 0.55 }
-          : cur;
-        lastSeen = now;
+        for (let x=xRS;x<xRE;x+=2) {
+          const p=y*sample.width+x; countR++;
+          if (Math.abs(current[p]-previous[p]) > 24) changedR++;
+        }
+      }
+      motion[0] = changedL / Math.max(1,countL);
+      motion[1] = changedR / Math.max(1,countR);
+      const side = motion[0] > motion[1] ? 'left' : 'right';
+      const strength = Math.max(...motion);
+      if (strength > motionThreshold && now-lastHit > 520) {
+        // Exige que o lado dominante tenha mais movimento que o outro,
+        // reduzindo disparos causados por mudanças gerais de iluminação.
+        if (Math.max(...motion) > Math.min(...motion)*1.22) {
+          hitSide(side, now);
+        }
       }
     }
-  } catch (e) { /* ignora quadros ruins */ }
-  detecting = false;
-}
+    previous = current;
+  }
 
-const faceVisible = now => !!face && now - lastSeen < CONFIG.lostMs;
-const faceTooBig  = () => face && face.w > CONFIG.maxFaceW;
-function faceStatus(now) {
-  if (!faceVisible(now)) return 'none';
-  if (face.w > CONFIG.maxFaceW) return 'big';
-  if (face.w < CONFIG.minFaceW) return 'small';
-  if (Math.abs(face.cx - 0.5) > CONFIG.centerTolX || Math.abs(face.cy - CONFIG.ellipseCy) > CONFIG.centerTolY) return 'off';
-  return 'ok';
-}
-const HINTS = {
-  none:  'Não estou vendo seu rosto',
-  big:   'Perto demais. Afaste o celular',
-  small: 'Chegue um pouco mais perto',
-  off:   'Centralize o rosto na elipse',
-  ok:    'Perfeito! Fique assim…',
-};
-
-/* =====================  DETECÇÃO DE MOVIMENTO (MÃOS)  ===================== */
-let SW = CONFIG.motionW, SH = 140;
-const mc = document.createElement('canvas');
-const mctx = mc.getContext('2d', { willReadFrequently: true });
-mctx.imageSmoothingQuality = 'high';
-let grayA = null, grayB = null, prevGray = null;
-let motion = null;           // Uint8Array SW*SH (1 = mexeu)
-let motionValid = false, globalMotion = 0;
-
-function updateMotion() {
-  if (!video.videoWidth) return;
-  const vw = video.videoWidth, vh = video.videoHeight;
-  const s = Math.max(SW / vw, SH / vh);
-  const visW = SW / s, visH = SH / s, sx = (vw - visW) / 2, sy = (vh - visH) / 2;
-  mctx.save(); mctx.translate(SW, 0); mctx.scale(-1, 1);
-  mctx.drawImage(video, sx, sy, visW, visH, 0, 0, SW, SH);
-  mctx.restore();
-  const d = mctx.getImageData(0, 0, SW, SH).data;
-  const n = SW * SH;
-  if (!grayA || grayA.length !== n) { grayA = new Uint8Array(n); grayB = new Uint8Array(n); motion = new Uint8Array(n); prevGray = null; }
-  const cur = grayA;
-  for (let i = 0, j = 0; i < n; i++, j += 4) cur[i] = (d[j] * 77 + d[j + 1] * 150 + d[j + 2] * 29) >> 8;
-  if (prevGray) {
-    let cnt = 0;
-    for (let i = 0; i < n; i++) {
-      const df = cur[i] - prevGray[i];
-      const m = (df > CONFIG.pixelDiff || df < -CONFIG.pixelDiff) ? 1 : 0;
-      motion[i] = m; cnt += m;
+  function hitSide(side, now) {
+    const x = side === 'left' ? width*.175 : width*.825;
+    // Só considera objetos próximos da mão; escolhe o mais próximo do centro vertical.
+    let target = null, targetPair = null, best = Infinity;
+    for (const pair of pairs) {
+      for (const item of pair.items) {
+        if (item.side !== side) continue;
+        const distance = Math.abs(pair.y - height*.72);
+        if (distance < best && pair.y > height*.18 && pair.y < height*.92) {
+          best = distance; target = item; targetPair = pair;
+        }
+      }
     }
-    globalMotion = cnt / n;
-    motionValid = globalMotion < CONFIG.globalMax;
-  }
-  grayA = grayB; grayB = cur; prevGray = cur;     // troca os buffers
-}
-
-// fração de pixels em movimento dentro do círculo do emoji
-function regionMotion(cx, cy, r) {
-  if (!motion) return 0;
-  const px = cx / W * SW, py = cy / H * SH, pr = r / W * SW;
-  const x0 = Math.max(0, Math.floor(px - pr)), x1 = Math.min(SW - 1, Math.ceil(px + pr));
-  const y0 = Math.max(0, Math.floor(py - pr)), y1 = Math.min(SH - 1, Math.ceil(py + pr));
-  let tot = 0, mv = 0;
-  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
-    const dx = x - px, dy = y - py;
-    if (dx * dx + dy * dy <= pr * pr) { tot++; mv += motion[y * SW + x]; }
-  }
-  return tot ? mv / tot : 0;
-}
-
-/* =====================  LÓGICA DO JOGO  ===================== */
-const emojiSize = () => W * 0.20;
-const pick = a => a[(Math.random() * a.length) | 0];
-
-function spawnPair() {
-  const S = emojiSize();
-  const foodLeft = Math.random() < 0.5;
-  const jitter = () => (Math.random() - 0.5) * W * 0.04;
-  const mk = (side, food) => ({
-    x: (side === 'L' ? W * 0.15 : W * 0.85) + jitter(), y: -S * 0.6,
-    ch: pick(food ? FOOD : OTHER), food, hit: false, side });
-  g.items.push(mk('L', foodLeft), mk('R', !foodLeft));
-}
-
-function level() { return Math.min(g.goods, 60); }
-function fallSpeed() {            // px/s
-  const secs = CONFIG.fallSecondsStart / (1 + level() * 0.02);
-  return H / Math.max(1.5, secs);
-}
-function spawnEvery() { return Math.max(CONFIG.spawnMin, CONFIG.spawnStart - level() * 0.015); }
-
-function popFx(x, y, ch, good) {
-  fx.push({ kind: 'pop', x, y, ch, t: 0, dur: 0.35 });
-  if (good) for (let i = 0; i < 8; i++) {
-    const a = Math.random() * Math.PI * 2, v = 120 + Math.random() * 160;
-    fx.push({ kind: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, dur: 0.45 });
-  }
-}
-function textFx(x, y, txt, color) { fx.push({ kind: 'text', x, y, txt, color, t: 0, dur: 0.8 }); }
-
-function hitItem(e) {
-  e.hit = true;
-  if (e.food) {
-    g.combo++; g.goods++;
-    const mult = Math.min(5, 1 + Math.floor(g.combo / 5));
-    const pts = CONFIG.pointsFood * mult;
-    g.score += pts;
-    popFx(e.x, e.y, e.ch, true);
-    textFx(e.x, e.y - 10, '+' + pts, '#5df2b0');
-    sfxGood(g.combo);
-  } else {
-    g.lives--; g.combo = 0; flash = 1;
-    popFx(e.x, e.y, e.ch, false);
-    textFx(e.x, e.y - 10, '−1 ❤️', '#ff4d6d');
-    sfxBad();
-    if (g.lives <= 0) gameOver();
-  }
-}
-
-function update(dt) {
-  g.spawnT -= dt;
-  if (g.spawnT <= 0) { spawnPair(); g.spawnT = spawnEvery(); }
-  if (g.grace > 0) g.grace -= dt;
-
-  const sp = fallSpeed(), S = emojiSize(), R = S * 0.55;
-  for (const e of g.items) {
-    e.y += sp * dt;
-    if (!e.hit && g.grace <= 0 && motionValid && e.y > S * 0.1 && e.y < H + S * 0.2) {
-      if (regionMotion(e.x, e.y, R) >= CONFIG.hitRatio) { hitItem(e); if (mode !== 'playing') return; }
+    if (!target || best > height*.48) return;
+    lastHit = now;
+    if (target.valid) {
+      score++; updateHud(); showFlash('good');
+      statusEl.textContent = 'Boa! +1 ponto';
+    } else {
+      loseLife('Junk food! -1 vida');
     }
+    // Acertar qualquer item encerra a linha inteira: o par oposto desaparece.
+    for (const item of targetPair.items) item.hit = true;
+    pairs = pairs.filter(p => p !== targetPair);
   }
-  g.items = g.items.filter(e => {
-    if (e.hit) return false;
-    if (e.y - S > H) { if (e.food) g.combo = 0; return false; }   // comida que escapou quebra o combo
-    return true;
-  });
-}
 
-/* =====================  TRANSIÇÕES DE TELA  ===================== */
-let overTimer = 0;
-function goWaiting() {
-  mode = 'waiting'; holdT = 0;
-  elWelcome.classList.add('hidden'); elOver.classList.add('hidden'); elStart.classList.remove('hidden');
-  elPaused.classList.toggle('hidden', !g.started);
-}
-function beginPlay() {
-  mode = 'playing'; holdT = 0;
-  g.started = true; g.grace = 0.9;
-  elStart.classList.add('hidden');
-  beep(660, 0.1, 'triangle', 0.1, 990);
-}
-function gameOver() {
-  mode = 'over';
-  best = Math.max(best, g.score);
-  $('finalScore').textContent = g.score;
-  $('bestScore').textContent = 'Melhor da sessão: ' + best;
-  elStart.classList.add('hidden'); elOver.classList.remove('hidden');
-  overTimer = 6;
-}
-function again() {
-  g = newGame(); fx.length = 0; flash = 0;
-  goWaiting();
-}
-$('btnAgain').addEventListener('click', again);
-document.addEventListener('visibilitychange', () => { if (document.hidden && mode === 'playing') goWaiting(); });
-
-/* =====================  DESENHO  ===================== */
-function drawEmoji(ch, x, y, size, alpha = 1) {
-  ctx.globalAlpha = 1.0; //alpha;
-  ctx.font = `${size}px ${EMOJI_FONT}`;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(ch, x, y);
-  ctx.globalAlpha = 1.0; //1 
-}
-
-function drawLanes() {
-  const S = emojiSize();
-  ctx.fillStyle = 'rgba(255,246,232,.7)';
-  for (const cx of [W * 0.15, W * 0.85]) {
-    ctx.beginPath(); ctx.roundRect(cx - S * 0.75, 0, S * 1.5, H, S * 0.5); ctx.fill();
-  }
-}
-
-function drawHUD() {
-  const fs = Math.round(W * 0.11);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `900 ${fs}px ui-rounded, "SF Pro Rounded", "Trebuchet MS", system-ui, sans-serif`;
-  ctx.lineWidth = fs * 0.14; ctx.strokeStyle = 'rgba(28,16,48,.85)'; ctx.lineJoin = 'round';
-  const y = Math.max(H * 0.075, 54);
-  ctx.strokeText(g.score, W / 2, y); ctx.fillStyle = '#fff6e8'; ctx.fillText(g.score, W / 2, y);
-
-  let hearts = '';
-  for (let i = 0; i < CONFIG.lives; i++) hearts += i < g.lives ? '❤️' : '🖤';
-  ctx.font = `${Math.round(W * 0.06)}px ${EMOJI_FONT}`;
-  ctx.fillText(hearts, W / 2, y + fs * 0.85);
-
-  const mult = Math.min(5, 1 + Math.floor(g.combo / 5));
-  if (mult > 1) {
-    ctx.font = `900 ${Math.round(W * 0.05)}px ui-rounded, "Trebuchet MS", system-ui, sans-serif`;
-    ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(28,16,48,.85)';
-    ctx.strokeText('combo ×' + mult, W / 2, y + fs * 1.55);
-    ctx.fillStyle = '#ff8a3d'; ctx.fillText('combo ×' + mult, W / 2, y + fs * 1.55);
-  }
-}
-
-function drawFx(dt) {
-  for (let i = fx.length - 1; i >= 0; i--) {
-    const f = fx[i]; f.t += dt;
-    if (f.t >= f.dur) { fx.splice(i, 1); continue; }
-    const p = f.t / f.dur;
-    if (f.kind === 'pop') {
-      drawEmoji(f.ch, f.x, f.y, emojiSize() * (0.8 + p * 0.9), 1 - p);
-    } else if (f.kind === 'spark') {
-      f.x += f.vx * dt; f.y += f.vy * dt;
-      ctx.fillStyle = `rgba(255,138,61,${1 - p})`;
-      ctx.beginPath(); ctx.arc(f.x, f.y, 4 * (1 - p) + 1, 0, 7); ctx.fill();
-    } else if (f.kind === 'text') {
-      ctx.globalAlpha = 1 - p * p;
-      ctx.font = `900 ${Math.round(W * 0.07)}px ui-rounded, "Trebuchet MS", system-ui, sans-serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(28,16,48,.9)';
-      const y = f.y - p * H * 0.1;
-      ctx.strokeText(f.txt, f.x, y); ctx.fillStyle = f.color; ctx.fillText(f.txt, f.x, y);
-      ctx.globalAlpha = 1;
+  function draw(now) {
+    if (!running) return;
+    const dt = Math.min((now-lastFrame)/1000 || 0, .04); lastFrame = now;
+    detectMotion(now);
+    if (now-lastSpawn > Math.max(850,1450-score*8)) spawnPair(now);
+    ctx.clearRect(0,0,width,height);
+    for (const pair of pairs) {
+      pair.y += pair.speed*dt;
+      for (const item of pair.items) {
+        ctx.save();
+        ctx.font = `${Math.min(68,Math.max(48,width*.14))}px system-ui`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#000'; ctx.shadowBlur = 12;
+        ctx.fillText(item.emoji,item.x,pair.y);
+        ctx.restore();
+      }
+      if (pair.y > height+65) {
+        pairs = pairs.filter(p => p !== pair);
+        loseLife('Uma linha escapou! -1 vida');
+        break;
+      }
     }
-  }
-}
-
-function drawDebug(now) {
-  if (motion) {
-    ctx.fillStyle = 'rgba(255,60,60,.45)';
-    const cw = W / SW, ch = H / SH;
-    for (let y = 0; y < SH; y++) for (let x = 0; x < SW; x++)
-      if (motion[y * SW + x]) ctx.fillRect(x * cw, y * ch, cw + 0.5, ch + 0.5);
-  }
-  if (face) {
-    ctx.strokeStyle = faceVisible(now) ? '#5df2b0' : '#888'; ctx.lineWidth = 2;
-    ctx.strokeRect((face.cx - face.w / 2) * W, (face.cy - face.h / 2) * H, face.w * W, face.h * H);
-  }
-  ctx.fillStyle = '#fff'; ctx.font = '12px monospace'; ctx.textAlign = 'left';
-  ctx.fillText(`mode=${mode} face=${face ? face.w.toFixed(2) : '-'} motion=${(globalMotion * 100).toFixed(0)}% ${motionValid ? '' : '(ignorado)'}`, 8, H - 10);
-}
-
-function render(dt, now) {
-  ctx.clearRect(0, 0, W, H);
-  if (mode === 'welcome') return;
-
-  if (g.started || mode === 'playing') {
-    drawLanes();
-    const S = emojiSize();
-    for (const e of g.items) if (!e.hit) drawEmoji(e.ch, e.x, e.y, S * 0.82);
-    drawFx(dt);
-    drawHUD();
-  }
-  if (flash > 0) {
-    ctx.fillStyle = `rgba(255,77,109,${flash * 0.35})`; ctx.fillRect(0, 0, W, H);
-    flash = Math.max(0, flash - dt * 3);
-  }
-  if (DEBUG) drawDebug(now);
-}
-
-/* =====================  LOOP PRINCIPAL  ===================== */
-let last = performance.now(), lastDetect = 0, lastMotion = 0;
-function loop(now) {
-  requestAnimationFrame(loop);
-  const dt = Math.min(0.05, (now - last) / 1000); last = now;
-
-  if (mode !== 'welcome') {
-    if (now - lastDetect > 70) { lastDetect = now; runDetect(now); }
-    if (now - lastMotion > CONFIG.motionEveryMs) { lastMotion = now; updateMotion(); }
+    raf = requestAnimationFrame(draw);
   }
 
-  if (mode === 'waiting') {
-    const st = faceStatus(now);
-    elHint.textContent = HINTS[st];
-    elHint.classList.toggle('ok', st === 'ok');
-    elEllipse.classList.toggle('ok', st === 'ok');
-    if (st === 'ok') { holdT += dt * 1000; if (holdT >= CONFIG.holdMs) beginPlay(); }
-    else holdT = 0;
-  } else if (mode === 'playing') {
-    // pausa: rosto sumiu ou ficou maior que 40% da largura
-    if (!faceVisible(now) || faceTooBig()) goWaiting();
-    else update(dt);
-  } else if (mode === 'over') {
-    overTimer -= dt;
-    $('overCount').textContent = overTimer > 0 ? `Voltando ao início em ${Math.ceil(overTimer)}s` : '';
-    if (overTimer <= 0) again();
+  function endGame() {
+    running = false; cancelAnimationFrame(raf);
+    overlay.style.display = 'flex';
+    overlay.querySelector('h1').innerHTML = 'FIM DE <span>JOGO</span>';
+    overlay.querySelector('.sub').textContent = `Sua pontuação: ${score}. Quer tentar novamente?`;
+    startBtn.textContent = 'JOGAR NOVAMENTE';
+    message.textContent = 'Dica: movimentos rápidos e definidos ajudam a detectar os golpes.';
+    statusEl.textContent = 'Jogo encerrado';
   }
 
-  render(dt, now);
-}
-
-window.addEventListener('resize', resize);
-resize();
-requestAnimationFrame(loop);
+  async function startGame() {
+    message.textContent = 'Solicitando acesso à câmera…';
+    startBtn.disabled = true;
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Seu navegador não permite câmera nesta página. Abra usando HTTPS.');
+      }
+      if (stream) stream.getTracks().forEach(t=>t.stop());
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio:false, video:{facingMode:'user', width:{ideal:640}, height:{ideal:480}}
+      });
+      video.srcObject = stream;
+      await video.play();
+      score=0; lives=3; pairs=[]; previous=null; motion=[0,0]; lastHit=0; lastSpawn=performance.now();
+      updateHud(); overlay.style.display='none';
+      statusEl.textContent = 'Pronto! Movimente as mãos nos lados da tela';
+      running=true; lastFrame=performance.now(); raf=requestAnimationFrame(draw);
+    } catch (err) {
+      message.textContent = err.name === 'NotAllowedError'
+        ? 'Permita o acesso à câmera nas configurações do navegador e tente novamente.'
+        : (err.message || 'Não foi possível iniciar a câmera.');
+    } finally { startBtn.disabled=false; }
+  }
+  startBtn.addEventListener('click',startGame);
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden && running){ running=false; cancelAnimationFrame(raf); statusEl.textContent='Jogo pausado'; } });
+  updateHud();
 })();
 </script>
 </body>
